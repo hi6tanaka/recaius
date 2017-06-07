@@ -55,7 +55,7 @@ func (conn *asrConnection) urlDelete() string {
 	return fmt.Sprintf("%s/voices/%s", asrURL, conn.ID)
 }
 
-func (conn *asrConnection) Send(buf []byte) ([]asrResult, error) {
+func (conn *asrConnection) Send(buf []byte) ([]AsrResult, error) {
 	var data bytes.Buffer
 	w := multipart.NewWriter(&data)
 	fw, err := w.CreateFormField("voice_id")
@@ -83,7 +83,7 @@ func (conn *asrConnection) Send(buf []byte) ([]asrResult, error) {
 	return conn.checkResponse(resp)
 }
 
-func (conn *asrConnection) Flush() ([]asrResult, error) {
+func (conn *asrConnection) Flush() ([]AsrResult, error) {
 	data, err := json.Marshal(&asrFlushPayload{conn.voiceID})
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (conn *asrConnection) Flush() ([]asrResult, error) {
 	return conn.checkResponse(resp)
 }
 
-func (conn *asrConnection) AskResult() ([]asrResult, error) {
+func (conn *asrConnection) AskResult() ([]AsrResult, error) {
 	resp, err := callApi(conn.auth, "GET", conn.urlResults(), nil, "")
 	if err != nil {
 		return nil, err
@@ -107,8 +107,8 @@ func (conn *asrConnection) AskResult() ([]asrResult, error) {
 
 // TODO: support confnet
 // TODO: nbest is currently interface{}.
-func (conn *asrConnection) checkResponse(resp *http.Response) ([]asrResult, error) {
-	var rs []asrResult
+func (conn *asrConnection) checkResponse(resp *http.Response) ([]AsrResult, error) {
+	var rs []AsrResult
 	if resp.StatusCode == 200 {
 		resultType := conn.config.ResultType
 		if resultType == "" || resultType == "one_best" {
@@ -117,16 +117,16 @@ func (conn *asrConnection) checkResponse(resp *http.Response) ([]asrResult, erro
 				return nil, err
 			}
 			for _, x := range r {
-				item := asrOneBest{Type: x[0], Str: x[1]}
-				rs = append(rs, asrResult{Type: item.Type, OneBest: &item})
+				item := AsrOneBest{Type: x[0], Str: x[1]}
+				rs = append(rs, AsrResult{Type: item.Type, OneBest: item})
 			}
 		} else if resultType == "nbest" {
-			var r []asrNBest
+			var r []AsrNBest
 			if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 				return nil, err
 			}
 			for _, x := range r {
-				rs = append(rs, asrResult{Type: x.Type, NBest: &x})
+				rs = append(rs, AsrResult{Type: x.Type, NBest: x})
 			}
 		} else {
 			return nil, fmt.Errorf("result_type: %s is not supported", resultType)

@@ -18,12 +18,12 @@ type asrFlushPayload struct {
 	VoiceID int64 `json:"voice_id"`
 }
 
-type asrOneBest struct {
+type AsrOneBest struct {
 	Type string
 	Str  string
 }
 
-type asrNBestElement struct {
+type AsrNBestElement struct {
 	Str        string
 	Confidence float64
 	Yomi       string
@@ -31,19 +31,19 @@ type asrNBestElement struct {
 	End        int64
 }
 
-type asrNBest struct {
+type AsrNBest struct {
 	Type       string
 	Status     string
 	ResultTemp string
-	Result     [][]asrNBestElement
+	Result     [][]AsrNBestElement
 	ResultRaw  interface{} `json:"result"`
 }
 
-type asrResult struct {
+type AsrResult struct {
 	Type    string
 	Err     error
-	OneBest *asrOneBest
-	NBest   *asrNBest
+	OneBest AsrOneBest
+	NBest   AsrNBest
 	// ConfNet *asrConfNet
 }
 

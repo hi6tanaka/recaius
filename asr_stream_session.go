@@ -7,16 +7,16 @@ package recaius
 import "time"
 
 type asrResultChannel struct {
-	input  chan asrResult
-	output chan asrResult
+	input  chan AsrResult
+	output chan AsrResult
 	length chan int
-	buffer []asrResult
+	buffer []AsrResult
 }
 
 func newAsrResultChannel() *asrResultChannel {
 	ch := &asrResultChannel{
-		input:  make(chan asrResult),
-		output: make(chan asrResult),
+		input:  make(chan AsrResult),
+		output: make(chan AsrResult),
 		length: make(chan int),
 		buffer: nil,
 	}
@@ -24,11 +24,11 @@ func newAsrResultChannel() *asrResultChannel {
 	return ch
 }
 
-func (a *asrResultChannel) In() chan<- asrResult {
+func (a *asrResultChannel) In() chan<- AsrResult {
 	return a.input
 }
 
-func (a *asrResultChannel) Out() <-chan asrResult {
+func (a *asrResultChannel) Out() <-chan AsrResult {
 	return a.output
 }
 
@@ -52,8 +52,8 @@ func (a *asrResultChannel) ClosedOut() bool {
 }
 
 func (a *asrResultChannel) loop() {
-	var i, o chan asrResult
-	var n asrResult
+	var i, o chan AsrResult
+	var n AsrResult
 
 	i = a.input
 
@@ -97,7 +97,7 @@ func newAsrStreamSession(conn *asrConnection) *asrStreamSession {
 	}
 }
 
-func (sess *asrStreamSession) Response() <-chan asrResult {
+func (sess *asrStreamSession) Response() <-chan AsrResult {
 	return sess.ch.Out()
 }
 
@@ -112,7 +112,7 @@ func (sess *asrStreamSession) StartWatch() {
 		case <-ticker.C:
 			rs, err := sess.conn.AskResult()
 			if err != nil {
-				sess.ch.In() <- asrResult{Err: err}
+				sess.ch.In() <- AsrResult{Err: err}
 				return
 			}
 			sess.emitResults(rs)
@@ -126,7 +126,7 @@ func (sess *asrStreamSession) StartWatch() {
 func (sess *asrStreamSession) Send(data []byte) {
 	rs, err := sess.conn.Send(data)
 	if err != nil {
-		sess.ch.In() <- asrResult{Err: err}
+		sess.ch.In() <- AsrResult{Err: err}
 		return
 	}
 	sess.emitResults(rs)
@@ -136,7 +136,7 @@ func (sess *asrStreamSession) Send(data []byte) {
 func (sess *asrStreamSession) Flush() {
 	rs, err := sess.conn.Flush()
 	if err != nil {
-		sess.ch.In() <- asrResult{Err: err}
+		sess.ch.In() <- AsrResult{Err: err}
 		return
 	}
 	sess.emitResults(rs)
@@ -148,7 +148,7 @@ func (sess *asrStreamSession) Close() {
 	sess.conn.Close()
 }
 
-func (sess *asrStreamSession) emitResults(rs []asrResult) {
+func (sess *asrStreamSession) emitResults(rs []AsrResult) {
 	ch := sess.ch.In()
 	for _, r := range rs {
 		if r.Type == "NO_DATA" {

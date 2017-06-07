@@ -4,7 +4,7 @@ import "time"
 
 type asrSession struct {
 	conn     *asrConnection
-	results  []asrResult
+	results  []AsrResult
 	buffered bool // 結果が残っている（かもしれない）
 }
 
@@ -31,7 +31,7 @@ func (sess *asrSession) Close() {
 	sess.conn.Close()
 }
 
-func (sess *asrSession) Wait() ([]asrResult, error) {
+func (sess *asrSession) Wait() ([]AsrResult, error) {
 	if !sess.buffered {
 		return sess.results, nil
 	}
@@ -52,14 +52,14 @@ func (sess *asrSession) Wait() ([]asrResult, error) {
 	}
 }
 
-func (sess *asrSession) FlushWait() ([]asrResult, error) {
+func (sess *asrSession) FlushWait() ([]AsrResult, error) {
 	if err := sess.Flush(); err != nil {
 		return nil, err
 	}
 	return sess.Wait()
 }
 
-func (sess *asrSession) storeResults(rs []asrResult) {
+func (sess *asrSession) storeResults(rs []AsrResult) {
 	for _, r := range rs {
 		sess.results = append(sess.results, r)
 		if r.Type == "NO_DATA" {
