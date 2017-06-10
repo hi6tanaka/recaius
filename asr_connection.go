@@ -9,15 +9,17 @@ import (
 	"strconv"
 )
 
+type asrConnectionCloseCallback func(*asrConnection)
+
 type asrConnection struct {
-	ID      string
-	auth    *Auth
-	config  *AsrConfig
-	voiceID int64
-	busy    bool
+	ID            string
+	auth          *Auth
+	config        *AsrConfig
+	voiceID       int64
+	closeCallback asrConnectionCloseCallback
 }
 
-func newAsrConnection(auth *Auth, config *AsrConfig) (*asrConnection, error) {
+func newAsrConnection(auth *Auth, config *AsrConfig, closeCallback asrConnectionCloseCallback) (*asrConnection, error) {
 	url := fmt.Sprintf("%s/voices", asrURL)
 	payload, err := json.Marshal(config)
 	if err != nil {
@@ -34,11 +36,11 @@ func newAsrConnection(auth *Auth, config *AsrConfig) (*asrConnection, error) {
 		return nil, err
 	}
 	return &asrConnection{
-		ID:      t.UUID,
-		auth:    auth,
-		config:  config,
-		voiceID: 1,
-		busy:    true,
+		ID:            t.UUID,
+		auth:          auth,
+		config:        config,
+		voiceID:       1,
+		closeCallback: closeCallback,
 	}, nil
 }
 
@@ -74,7 +76,9 @@ func (conn *asrConnection) Send(buf []byte) ([]AsrResult, error) {
 	}
 	w.Close()
 
+	// fmt.Println(">call api:", conn.voiceID, conn.urlSend())
 	resp, err := callApi(conn.auth, "PUT", conn.urlSend(), &data, w.FormDataContentType())
+	// fmt.Println("<call done:", conn.voiceID, conn.urlSend())
 	if err != nil {
 		return nil, err
 	}
@@ -140,4 +144,5 @@ func (conn *asrConnection) Close() {
 		return
 	}
 	callApi(conn.auth, "DELETE", conn.urlDelete(), nil, "")
+	conn.closeCallback(conn)
 }

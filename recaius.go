@@ -21,7 +21,7 @@ func (e ResponseError) Error() string {
 // You must Close response if not nil
 func callApi(auth *Auth, method string, url string, body io.Reader, contentType string) (*http.Response, error) {
 	client := &http.Client{}
-	req, err := makeAuthorizedRequest(client, auth, method, url, body)
+	req, err := auth.MakeAuthorizedRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
