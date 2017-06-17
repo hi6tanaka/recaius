@@ -90,7 +90,7 @@ func (a *Asr) Session() (*asrSession, error) {
 }
 
 // find free connection, or make new connection
-func (a *Asr) Stream() (*asrStreamSession, error) {
+func (a *Asr) Stream() (*AsrStreamSession, error) {
 	conn, err := a.newConnection()
 	if err != nil {
 		return nil, err

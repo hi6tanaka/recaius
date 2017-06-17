@@ -85,23 +85,23 @@ func (a *asrResultChannel) loop() {
 	a.output, a.length = nil, nil
 }
 
-type asrStreamSession struct {
+type AsrStreamSession struct {
 	conn *asrConnection
 	ch   *asrResultChannel
 }
 
-func newAsrStreamSession(conn *asrConnection) *asrStreamSession {
-	return &asrStreamSession{
+func newAsrStreamSession(conn *asrConnection) *AsrStreamSession {
+	return &AsrStreamSession{
 		conn: conn,
 		ch:   newAsrResultChannel(),
 	}
 }
 
-func (sess *asrStreamSession) Response() <-chan AsrResult {
+func (sess *AsrStreamSession) Response() <-chan AsrResult {
 	return sess.ch.Out()
 }
 
-func (sess *asrStreamSession) StartWatch() {
+func (sess *AsrStreamSession) StartWatch() {
 	if sess.ch.ClosedIn() {
 		return
 	}
@@ -123,7 +123,7 @@ func (sess *asrStreamSession) StartWatch() {
 	}
 }
 
-func (sess *asrStreamSession) Send(data []byte) {
+func (sess *AsrStreamSession) Send(data []byte) {
 	rs, err := sess.conn.Send(data)
 	if err != nil {
 		sess.ch.In() <- AsrResult{Err: err}
@@ -133,7 +133,7 @@ func (sess *asrStreamSession) Send(data []byte) {
 	return
 }
 
-func (sess *asrStreamSession) Flush() {
+func (sess *AsrStreamSession) Flush() {
 	rs, err := sess.conn.Flush()
 	if err != nil {
 		sess.ch.In() <- AsrResult{Err: err}
@@ -143,12 +143,12 @@ func (sess *asrStreamSession) Flush() {
 	return
 }
 
-func (sess *asrStreamSession) Close() {
+func (sess *AsrStreamSession) Close() {
 	sess.ch.Close()
 	sess.conn.Close()
 }
 
-func (sess *asrStreamSession) emitResults(rs []AsrResult) {
+func (sess *AsrStreamSession) emitResults(rs []AsrResult) {
 	ch := sess.ch.In()
 	for _, r := range rs {
 		if r.Type == "NO_DATA" {
