@@ -7,6 +7,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 type asrConnectionCloseCallback func(*asrConnection)
@@ -110,7 +112,6 @@ func (conn *asrConnection) AskResult() ([]AsrResult, error) {
 }
 
 // TODO: support confnet
-// TODO: nbest is currently interface{}.
 func (conn *asrConnection) checkResponse(resp *http.Response) ([]AsrResult, error) {
 	var rs []AsrResult
 	if resp.StatusCode == 200 {
@@ -125,12 +126,31 @@ func (conn *asrConnection) checkResponse(resp *http.Response) ([]AsrResult, erro
 				rs = append(rs, AsrResult{Type: item.Type, OneBest: item})
 			}
 		} else if resultType == "nbest" {
-			var r []AsrNBest
-			if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+			nbestTemp := []struct {
+				Type   string
+				Status string
+				Result interface{}
+			}{}
+			if err := json.NewDecoder(resp.Body).Decode(&nbestTemp); err != nil {
 				return nil, err
 			}
-			for _, x := range r {
-				rs = append(rs, AsrResult{Type: x.Type, NBest: x})
+			for _, x := range nbestTemp {
+				if x.Type == "TMP_RESULT" {
+					s, ok := x.Result.(string)
+					if !ok {
+						return nil, fmt.Errorf("Expect string in result")
+					}
+					rs = append(rs, AsrResult{Type: x.Type, NBest: AsrNBest{Type: x.Type, Status: x.Status, ResultTemp: s}})
+				} else if x.Type == "RESULT" {
+					r := AsrNBest{Type: x.Type, Status: x.Status}
+					// fmt.Println(x.Result)
+					if err := mapstructure.Decode(x.Result, &r.Result); err != nil {
+						return nil, err
+					}
+					rs = append(rs, AsrResult{Type: x.Type, NBest: r})
+				} else {
+					rs = append(rs, AsrResult{Type: x.Type, NBest: AsrNBest{Type: x.Type, Status: x.Status}})
+				}
 			}
 		} else {
 			return nil, fmt.Errorf("result_type: %s is not supported", resultType)

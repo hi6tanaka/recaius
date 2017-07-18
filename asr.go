@@ -27,6 +27,12 @@ type AsrOneBest struct {
 type AsrNBestElement struct {
 	Str        string
 	Confidence float64
+	Words      []AsrNBestWord
+}
+
+type AsrNBestWord struct {
+	Str        string
+	Confidence float64
 	Yomi       string
 	Begin      int64
 	End        int64
@@ -36,8 +42,7 @@ type AsrNBest struct {
 	Type       string
 	Status     string
 	ResultTemp string
-	Result     [][]AsrNBestElement
-	ResultRaw  interface{} `json:"result"`
+	Result     []AsrNBestElement
 }
 
 type AsrResult struct {
